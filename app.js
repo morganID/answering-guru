@@ -200,18 +200,20 @@ Create a natural, conversational response in ENGLISH with these requirements:
 5. **COMPREHENSIVE**: Provide sufficient detail but keep it conversational
 6. **POSITIVE**: Always use a positive and helpful tone
 
-CRITICAL INSTRUCTIONS:
-- DO NOT use any markdown formatting (*, **, _, etc.)
-- DO NOT include greetings or closings
-- DO NOT sound robotic or overly formal
-- Write like you're having a natural conversation
-- Use normal punctuation and sentence structure
-- Be helpful and personable
+ABSOLUTELY CRITICAL FORMATTING RULES:
+- NO MARKDOWN WHATSOEVER: Do NOT use *, **, _, #, ##, ###, -, +, 1., 2., etc.
+- NO BOLD TEXT: Do NOT use **bold** or *italic* formatting
+- NO LISTS: Do NOT create numbered lists or bullet points
+- NO HEADERS: Do NOT use # headers or any special formatting
+- NO QUOTES: Do NOT use quotation marks around text unless it's actual quoted speech
+- NO SPECIAL CHARACTERS: Write in plain, normal English text only
+
+The response must be PLAIN TEXT ONLY - just normal sentences and paragraphs like you're writing an email or having a conversation. No formatting, no lists, no bold, no italics, no special characters.
 
 NATURAL RESPONSE:`;
 
         console.log('📡 Making API request...');
-        console.log('🔗 API URL:', `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.apiKey.substring(0, 10)}...`);
+        console.log('🔗 API URL:', `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${this.apiKey.substring(0, 10)}...`);
         console.log('📝 Prompt length:', prompt.length);
 
         const requestBody = {
@@ -230,7 +232,7 @@ NATURAL RESPONSE:`;
 
         console.log('📦 Request body:', JSON.stringify(requestBody, null, 2));
 
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${this.apiKey}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -270,17 +272,20 @@ CLIENT MESSAGE: "${clientMessage}"
 
 Analyze this message and provide 3 different response suggestions that would be appropriate for a freelancer. Each suggestion should be:
 
-1. **Context-appropriate**: Directly relevant to what the client asked
-2. **Professional yet human**: Natural language, not robotic
-3. **Helpful**: Provides value to the client
-4. **Concise**: Keep each suggestion to 1-2 sentences
+1. Context-appropriate: Directly relevant to what the client asked
+2. Professional yet human: Natural language, not robotic
+3. Helpful: Provides value to the client
+4. Concise: Keep each suggestion to 1-2 sentences
 
+CRITICAL FORMATTING INSTRUCTIONS:
 Format your response as exactly 3 numbered suggestions, each starting with a number and a period, with no additional text or formatting.
 
 Example format:
 1. First suggestion here
 2. Second suggestion here
 3. Third suggestion here
+
+IMPORTANT: The suggestions themselves must be PLAIN TEXT only - no markdown, no bold, no italics, no special formatting within each suggestion.
 
 SUGGESTIONS:`;
 
@@ -298,7 +303,7 @@ SUGGESTIONS:`;
             }
         };
 
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${this.apiKey}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -499,7 +504,7 @@ SUGGESTIONS:`;
 
         try {
             // Make a simple test request
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${testKey}`, {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${testKey}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',
