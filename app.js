@@ -188,7 +188,7 @@ IMPORTANT: Respond ONLY with the professional answer itself. Do NOT include any 
 PROFESSIONAL RESPONSE:`;
 
         console.log('📡 Making API request...');
-        console.log('🔗 API URL:', `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${this.apiKey.substring(0, 10)}...`);
+        console.log('🔗 API URL:', `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.apiKey.substring(0, 10)}...`);
         console.log('📝 Prompt length:', prompt.length);
 
         const requestBody = {
@@ -197,17 +197,17 @@ PROFESSIONAL RESPONSE:`;
                     text: prompt
                 }]
             }],
-            generationConfig: {
-                temperature: 0.8,
-                topK: 40,
-                topP: 0.95,
-                maxOutputTokens: 1024,
-            }
+                generationConfig: {
+                    temperature: 0.8,
+                    topK: 40,
+                    topP: 0.95,
+                    maxOutputTokens: 2048,
+                }
         };
 
         console.log('📦 Request body:', JSON.stringify(requestBody, null, 2));
 
-        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${this.apiKey}`, {
+        const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`, {
             method: 'POST',
             headers: {
                 'Content-Type': 'application/json',
@@ -370,7 +370,7 @@ PROFESSIONAL RESPONSE:`;
 
         try {
             // Make a simple test request
-            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${testKey}`, {
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${testKey}`, {
                 method: 'POST',
                 headers: {
                     'Content-Type': 'application/json',

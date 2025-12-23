@@ -520,6 +520,9 @@ main {
     border: 1px solid #e9ecef;
     white-space: pre-wrap;
     font-family: inherit;
+    max-height: 500px;
+    overflow-y: auto;
+    word-wrap: break-word;
 }
 
 /* Main content layout */
