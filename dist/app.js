@@ -77,13 +77,13 @@
             console.log('🎯 handleGenerate called');
 
             const shortAnswer = this.shortAnswerInput.value.trim();
+            const clientMessage = this.clientMessageInput.value.trim();
             console.log('📝 Short answer:', shortAnswer);
-            console.log('📝 Short answer element:', this.shortAnswerInput);
-            console.log('📝 Short answer value:', this.shortAnswerInput?.value);
+            console.log('💬 Client message:', clientMessage);
 
-            if (!shortAnswer) {
-                console.log('❌ No short answer provided');
-                alert('Please enter your short answer first.');
+            if (!clientMessage) {
+                console.log('❌ No client message provided');
+                alert('Please enter the client\'s message first.');
                 return;
             }
 
@@ -100,28 +100,44 @@
             this.setLoading(true);
 
             try {
-                // Generate professional answer using Gemini API
-                const clientMessage = this.clientMessageInput.value.trim();
-                console.log('💬 Client message:', clientMessage);
+                let professionalAnswer;
+                let suggestions;
 
-                console.log('🚀 Calling Gemini API...');
-                const professionalAnswer = await this.generateProfessionalAnswer(shortAnswer);
-                console.log('✅ API response received:', professionalAnswer);
+                if (!shortAnswer) {
+                    console.log('💡 No short answer provided, generating suggestions...');
+                    // Generate suggestions for yes/no context
+                    suggestions = await this.generateSuggestions(clientMessage);
+                    console.log('✅ Suggestions generated:', suggestions);
 
-                // Show result
-                console.log('📄 Showing result...');
-                this.showResult(professionalAnswer);
+                    // Show suggestions
+                    this.showSuggestions(suggestions);
 
-                // Add to history
-                console.log('💾 Adding to history...');
-                this.addToHistory(clientMessage, shortAnswer, professionalAnswer);
+                    // Add to history as suggestion
+                    this.addToHistory(clientMessage, '[Suggestions Generated]', suggestions.join('\n\n'));
 
-                // Clear inputs
-                console.log('🧹 Clearing inputs...');
-                this.clientMessageInput.value = '';
-                this.shortAnswerInput.value = '';
+                    console.log('🎉 Suggestions generated successfully!');
+                } else {
+                    console.log('🚀 Calling Gemini API for professional answer...');
+                    professionalAnswer = await this.generateProfessionalAnswer(shortAnswer);
+                    console.log('✅ API response received:', professionalAnswer);
 
-                console.log('🎉 Generate process completed successfully!');
+                    // Show result
+                    console.log('📄 Showing result...');
+                    this.showResult(professionalAnswer);
+
+                    // Add to history
+                    console.log('💾 Adding to history...');
+                    this.addToHistory(clientMessage, shortAnswer, professionalAnswer);
+
+                    console.log('🎉 Generate process completed successfully!');
+                }
+
+                // Clear inputs only if we have a result (not suggestions)
+                if (professionalAnswer) {
+                    console.log('🧹 Clearing inputs...');
+                    this.clientMessageInput.value = '';
+                    this.shortAnswerInput.value = '';
+                }
 
             } catch (error) {
                 console.error('❌ Error generating answer:', error);
@@ -250,12 +266,118 @@ NATURAL RESPONSE:`;
             return result;
         }
 
+        async generateSuggestions(clientMessage) {
+            const prompt = `You are a professional freelancer. Analyze the client's message and provide 3 different suggestion options for how to respond professionally and naturally.
+
+CLIENT MESSAGE: "${clientMessage}"
+
+Analyze this message and provide 3 different response suggestions that would be appropriate for a freelancer. Each suggestion should be:
+
+1. **Context-appropriate**: Directly relevant to what the client asked
+2. **Professional yet human**: Natural language, not robotic
+3. **Helpful**: Provides value to the client
+4. **Concise**: Keep each suggestion to 1-2 sentences
+
+Format your response as exactly 3 numbered suggestions, each starting with a number and a period, with no additional text or formatting.
+
+Example format:
+1. First suggestion here
+2. Second suggestion here
+3. Third suggestion here
+
+SUGGESTIONS:`;
+
+            const requestBody = {
+                contents: [{
+                    parts: [{
+                        text: prompt
+                    }]
+                }],
+                generationConfig: {
+                    temperature: 0.9,
+                    topK: 40,
+                    topP: 0.95,
+                    maxOutputTokens: 1024,
+                }
+            };
+
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.apiKey}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestBody)
+            });
+
+            if (!response.ok) {
+                const errorData = await response.json();
+                throw new Error(`API Error: ${errorData.error?.message || 'Unknown error'}`);
+            }
+
+            const data = await response.json();
+            if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+                throw new Error('Invalid API response');
+            }
+
+            const result = data.candidates[0].content.parts[0].text.trim();
+
+            // Parse the numbered suggestions
+            const suggestions = result.split('\n')
+                .map(line => line.trim())
+                .filter(line => /^\d+\./.test(line))
+                .map(line => line.replace(/^\d+\.\s*/, ''));
+
+            return suggestions.slice(0, 3); // Ensure we only return 3 suggestions
+        }
+
         showResult(answer) {
             this.resultContent.textContent = answer;
             this.resultSection.style.display = 'block';
 
             // Scroll to result section
             this.resultSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        showSuggestions(suggestions) {
+            // Create suggestions HTML
+            const suggestionsHtml = suggestions.map((suggestion, index) => `
+            <div class="suggestion-item">
+                <div class="suggestion-number">${index + 1}</div>
+                <div class="suggestion-text">${suggestion}</div>
+                <button class="use-suggestion-btn" onclick="answeringGuru.useSuggestion('${suggestion.replace(/'/g, "\\'")}')">
+                    Use This
+                </button>
+            </div>
+        `).join('');
+
+            this.resultContent.innerHTML = `
+            <div class="suggestions-container">
+                <div class="suggestions-header">
+                    💡 Here are some suggestion options for your response:
+                </div>
+                <div class="suggestions-list">
+                    ${suggestionsHtml}
+                </div>
+            </div>
+        `;
+            this.resultSection.style.display = 'block';
+
+            // Scroll to result section
+            this.resultSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        useSuggestion(suggestion) {
+            // Set the suggestion as the short answer
+            this.shortAnswerInput.value = suggestion;
+
+            // Hide suggestions and show normal result area
+            this.resultSection.style.display = 'none';
+
+            // Focus on the input for editing
+            this.shortAnswerInput.focus();
+
+            // Optional: Scroll to the input area
+            this.shortAnswerInput.scrollIntoView({ behavior: 'smooth' });
         }
 
         async copyResult() {

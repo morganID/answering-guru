@@ -525,6 +525,86 @@ main {
     word-wrap: break-word;
 }
 
+/* Suggestions Styling */
+.suggestions-container {
+    width: 100%;
+}
+
+.suggestions-header {
+    font-size: 16px;
+    font-weight: 600;
+    color: #2c3e50;
+    margin-bottom: 16px;
+    padding-bottom: 12px;
+    border-bottom: 2px solid #e0e0e0;
+}
+
+.suggestions-list {
+    display: flex;
+    flex-direction: column;
+    gap: 12px;
+}
+
+.suggestion-item {
+    display: flex;
+    align-items: flex-start;
+    gap: 12px;
+    background: white;
+    border-radius: 8px;
+    padding: 16px;
+    border: 1px solid #e0e0e0;
+    transition: all 0.2s ease;
+}
+
+.suggestion-item:hover {
+    border-color: #667eea;
+    box-shadow: 0 2px 8px rgba(102, 126, 234, 0.1);
+}
+
+.suggestion-number {
+    width: 24px;
+    height: 24px;
+    background: linear-gradient(135deg, #667eea 0%, #764ba2 100%);
+    color: white;
+    border-radius: 50%;
+    display: flex;
+    align-items: center;
+    justify-content: center;
+    font-size: 12px;
+    font-weight: 600;
+    flex-shrink: 0;
+    margin-top: 2px;
+}
+
+.suggestion-text {
+    flex: 1;
+    line-height: 1.5;
+    color: #333;
+    font-size: 14px;
+}
+
+.use-suggestion-btn {
+    background: linear-gradient(135deg, #28a745 0%, #20c997 100%);
+    color: white;
+    border: none;
+    border-radius: 6px;
+    padding: 6px 12px;
+    font-size: 12px;
+    font-weight: 500;
+    cursor: pointer;
+    transition: all 0.2s ease;
+    flex-shrink: 0;
+}
+
+.use-suggestion-btn:hover {
+    transform: translateY(-1px);
+    box-shadow: 0 2px 6px rgba(40, 167, 69, 0.3);
+}
+
+.use-suggestion-btn:active {
+    transform: translateY(0);
+}
+
 /* Main content layout */
 .main-content {
     display: flex;
