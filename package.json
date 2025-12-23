@@ -1,0 +1,16 @@
+{
+  "name": "answering-guru",
+  "version": "1.0.0",
+  "description": "A Tauri application for answering questions like a guru",
+  "main": "index.js",
+  "scripts": {
+    "build": "rollup -c",
+    "dev": "rollup -c -w"
+  },
+  "author": "",
+  "license": "MIT",
+  "devDependencies": {
+    "@rollup/plugin-node-resolve": "^15.0.0",
+    "rollup": "^3.0.0"
+  }
+}
