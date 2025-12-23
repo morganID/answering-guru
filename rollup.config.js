@@ -1,4 +1,5 @@
 import resolve from '@rollup/plugin-node-resolve';
+import copy from 'rollup-plugin-copy';
 
 export default {
   input: 'app.js',
@@ -7,5 +8,13 @@ export default {
     format: 'iife',
     name: 'AnsweringGuru'
   },
-  plugins: [resolve()]
+  plugins: [
+    resolve(),
+    copy({
+      targets: [
+        { src: 'index.html', dest: 'dist/' },
+        { src: 'styles.css', dest: 'dist/' }
+      ]
+    })
+  ]
 };

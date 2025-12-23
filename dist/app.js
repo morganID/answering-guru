@@ -1,146 +1,487 @@
 (function () {
     'use strict';
 
-    // Answering Guru Application
+    // Answering Guru - Freelancer Professional Answer Generator
     class AnsweringGuru {
         constructor() {
-            this.chatMessages = document.getElementById('chat-messages');
-            this.questionInput = document.getElementById('question-input');
-            this.askButton = document.getElementById('ask-button');
+            this.clientMessageInput = document.getElementById('client-message-input');
+            this.shortAnswerInput = document.getElementById('short-answer-input');
+            this.generateButton = document.getElementById('generate-button');
+            this.pasteButton = document.getElementById('paste-button');
+            this.copyResultBtn = document.getElementById('copy-result-btn');
+            this.resultSection = document.getElementById('result-section');
+            this.resultContent = document.getElementById('result-content');
+            this.historyList = document.getElementById('history-list');
 
+            // Settings elements
+            this.settingsToggle = document.getElementById('settings-toggle');
+            this.settingsPanel = document.getElementById('settings-panel');
+            this.apiKeyInput = document.getElementById('api-key-input');
+            this.testApiKeyBtn = document.getElementById('test-api-key-btn');
+            this.saveApiKeyBtn = document.getElementById('save-api-key-btn');
+
+            // History sidebar elements
+            this.historyToggle = document.getElementById('history-toggle');
+            this.historySidebar = document.getElementById('history-sidebar');
+            this.closeHistoryBtn = document.getElementById('close-history');
+
+            this.apiKey = null;
+            this.history = this.loadHistory();
             this.init();
         }
 
         init() {
-            this.askButton.addEventListener('click', () => this.handleAsk());
-            this.questionInput.addEventListener('keypress', (e) => {
-                if (e.key === 'Enter') {
-                    this.handleAsk();
+            console.log('🚀 Initializing Answering Guru...');
+            console.log('🎯 DOM elements found:', {
+                generateButton: !!this.generateButton,
+                shortAnswerInput: !!this.shortAnswerInput,
+                clientMessageInput: !!this.clientMessageInput
+            });
+
+            this.generateButton.addEventListener('click', () => {
+                console.log('🖱️ Generate button clicked!');
+                this.handleGenerate();
+            });
+            this.pasteButton.addEventListener('click', () => this.handlePaste());
+            this.copyResultBtn.addEventListener('click', () => this.copyResult());
+
+            // Settings functionality
+            this.settingsToggle.addEventListener('click', () => this.toggleSettings());
+            this.testApiKeyBtn.addEventListener('click', () => this.testApiKey());
+            this.saveApiKeyBtn.addEventListener('click', () => this.saveApiKey());
+
+            // History sidebar functionality
+            this.historyToggle.addEventListener('click', () => this.toggleHistory());
+            this.closeHistoryBtn.addEventListener('click', () => this.closeHistory());
+
+            // Handle Enter key for short answer input
+            this.shortAnswerInput.addEventListener('keydown', (e) => {
+                if (e.key === 'Enter' && !e.shiftKey) {
+                    e.preventDefault();
+                    this.handleGenerate();
                 }
             });
 
-            // Focus on input when page loads
-            this.questionInput.focus();
+            // Load API key from localStorage
+            this.loadApiKey();
+
+            // Render history
+            this.renderHistory();
+
+            // Focus on client message input when page loads
+            this.clientMessageInput.focus();
         }
 
-        async handleAsk() {
-            const question = this.questionInput.value.trim();
-            if (!question) return;
+        async handleGenerate() {
+            console.log('🔄 Starting generate process...');
+            console.log('🎯 handleGenerate called');
 
-            // Add user message
-            this.addMessage(question, 'user');
-            this.questionInput.value = '';
+            const shortAnswer = this.shortAnswerInput.value.trim();
+            console.log('📝 Short answer:', shortAnswer);
+            console.log('📝 Short answer element:', this.shortAnswerInput);
+            console.log('📝 Short answer value:', this.shortAnswerInput?.value);
 
-            // Show typing indicator
-            this.showTypingIndicator();
+            if (!shortAnswer) {
+                console.log('❌ No short answer provided');
+                alert('Please enter your short answer first.');
+                return;
+            }
+
+            // Check if API key is available
+            console.log('🔑 API Key available:', !!this.apiKey);
+            if (!this.apiKey) {
+                console.log('❌ No API key found');
+                alert('Please set your Gemini API key first. You can get one from Google AI Studio.');
+                return;
+            }
+
+            // Disable button and show loading
+            console.log('⏳ Setting loading state...');
+            this.setLoading(true);
 
             try {
-                // Get answer from backend (placeholder for now)
-                const answer = await this.getAnswer(question);
+                // Generate professional answer using Gemini API
+                const clientMessage = this.clientMessageInput.value.trim();
+                console.log('💬 Client message:', clientMessage);
 
-                // Remove typing indicator and add bot response
-                this.hideTypingIndicator();
-                this.addMessage(answer, 'bot');
+                console.log('🚀 Calling Gemini API...');
+                const professionalAnswer = await this.generateProfessionalAnswer(shortAnswer);
+                console.log('✅ API response received:', professionalAnswer);
+
+                // Show result
+                console.log('📄 Showing result...');
+                this.showResult(professionalAnswer);
+
+                // Add to history
+                console.log('💾 Adding to history...');
+                this.addToHistory(clientMessage, shortAnswer, professionalAnswer);
+
+                // Clear inputs
+                console.log('🧹 Clearing inputs...');
+                this.clientMessageInput.value = '';
+                this.shortAnswerInput.value = '';
+
+                console.log('🎉 Generate process completed successfully!');
+
             } catch (error) {
-                console.error('Error getting answer:', error);
-                this.hideTypingIndicator();
-                this.addMessage('Sorry, I encountered an error. Please try again.', 'bot');
-            }
-
-            // Scroll to bottom
-            this.scrollToBottom();
-        }
-
-        addMessage(text, type) {
-            const messageDiv = document.createElement('div');
-            messageDiv.className = `message ${type}-message`;
-
-            const avatar = document.createElement('div');
-            avatar.className = 'message-avatar';
-            avatar.textContent = type === 'user' ? '👤' : '🧠';
-
-            const content = document.createElement('div');
-            content.className = 'message-content';
-
-            const textDiv = document.createElement('div');
-            textDiv.className = 'message-text';
-            textDiv.textContent = text;
-
-            content.appendChild(textDiv);
-            messageDiv.appendChild(avatar);
-            messageDiv.appendChild(content);
-
-            this.chatMessages.appendChild(messageDiv);
-            this.scrollToBottom();
-        }
-
-        showTypingIndicator() {
-            const typingDiv = document.createElement('div');
-            typingDiv.className = 'message bot-message typing-indicator';
-            typingDiv.id = 'typing-indicator';
-
-            const avatar = document.createElement('div');
-            avatar.className = 'message-avatar';
-            avatar.textContent = '🧠';
-
-            const content = document.createElement('div');
-            content.className = 'message-content';
-
-            const textDiv = document.createElement('div');
-            textDiv.className = 'message-text';
-            textDiv.innerHTML = 'Thinking... <span class="loading"></span>';
-
-            content.appendChild(textDiv);
-            typingDiv.appendChild(avatar);
-            typingDiv.appendChild(content);
-
-            this.chatMessages.appendChild(typingDiv);
-            this.scrollToBottom();
-        }
-
-        hideTypingIndicator() {
-            const typingIndicator = document.getElementById('typing-indicator');
-            if (typingIndicator) {
-                typingIndicator.remove();
+                console.error('❌ Error generating answer:', error);
+                console.error('Error details:', {
+                    message: error.message,
+                    stack: error.stack,
+                    name: error.name
+                });
+                alert('Sorry, I encountered an error while generating the answer. Please check your API key and try again. Check the browser console for details.');
+            } finally {
+                // Re-enable button
+                console.log('🔄 Re-enabling button...');
+                this.setLoading(false);
             }
         }
 
-        scrollToBottom() {
-            this.chatMessages.scrollTop = this.chatMessages.scrollHeight;
+        async handlePaste() {
+            try {
+                const text = await navigator.clipboard.readText();
+                this.clientMessageInput.value = text;
+                this.clientMessageInput.focus();
+
+                // Show feedback
+                const button = this.pasteButton;
+                const originalIcon = button.textContent;
+                button.textContent = '✅';
+                button.style.background = '#4CAF50';
+                setTimeout(() => {
+                    button.textContent = originalIcon;
+                    button.style.background = '';
+                }, 1000);
+            } catch (err) {
+                console.error('Failed to paste from clipboard:', err);
+                // Fallback for older browsers
+                this.clientMessageInput.focus();
+            }
         }
 
-        // Placeholder function for getting answers
-        // This will be replaced with actual Tauri backend calls
-        async getAnswer(question) {
-            // Simulate processing time
-            await new Promise(resolve => setTimeout(resolve, 1000 + Math.random() * 2000));
+        setLoading(loading) {
+            this.generateButton.disabled = loading;
+            if (loading) {
+                this.generateButton.innerHTML = '<span class="loading"></span> Generating...';
+            } else {
+                this.generateButton.innerHTML = '✨ Generate Professional Answer';
+            }
+        }
 
-            // Simple rule-based responses for demo
-            const responses = {
-                'hello': 'Hello! How can I help you today?',
-                'hi': 'Hi there! What would you like to know?',
-                'how are you': 'I\'m doing well, thank you for asking! I\'m here and ready to help you with any questions.',
-                'what is': 'That\'s a great question! Let me think about it...',
-                'why': 'Interesting question! The answer might be...',
-                'how': 'Let me explain how that works...',
-                'when': 'Timing is important! Let me tell you when...',
-                'where': 'Location matters! Here\'s where you can find...',
+        async generateProfessionalAnswer(shortAnswer) {
+            const clientMessage = this.clientMessageInput.value.trim();
+
+            const prompt = `You are a professional freelancer. Transform the short answer into a professional, friendly response that directly addresses the client's message.
+
+CLIENT MESSAGE: "${clientMessage || 'No specific context'}"
+
+YOUR SHORT ANSWER: "${shortAnswer}"
+
+Create a professional response in ENGLISH with these requirements:
+
+1. **CONTEXT APPROPRIATE**: Answer must directly respond to and be relevant to the client's message
+2. **PROFESSIONAL**: Use formal business language that is polite and well-structured
+3. **FRIENDLY**: Add warmth and friendliness without losing professionalism
+4. **COMPREHENSIVE**: Provide sufficient detail but not verbose
+5. **POSITIVE**: Always use a positive and helpful tone
+
+IMPORTANT: Respond ONLY with the professional answer itself. Do NOT include any greeting, opening phrases, or closing phrases like "Hello", "Thank you", "Best regards", etc. Just the direct professional response.
+
+PROFESSIONAL RESPONSE:`;
+
+            console.log('📡 Making API request...');
+            console.log('🔗 API URL:', `https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${this.apiKey.substring(0, 10)}...`);
+            console.log('📝 Prompt length:', prompt.length);
+
+            const requestBody = {
+                contents: [{
+                    parts: [{
+                        text: prompt
+                    }]
+                }],
+                generationConfig: {
+                    temperature: 0.8,
+                    topK: 40,
+                    topP: 0.95,
+                    maxOutputTokens: 1024,
+                }
             };
 
-            // Check for keywords in the question
-            const lowerQuestion = question.toLowerCase();
-            for (const [keyword, response] of Object.entries(responses)) {
-                if (lowerQuestion.includes(keyword)) {
-                    return response + ' (This is a placeholder response. The real answering functionality will be implemented in the Tauri backend.)';
-                }
+            console.log('📦 Request body:', JSON.stringify(requestBody, null, 2));
+
+            const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${this.apiKey}`, {
+                method: 'POST',
+                headers: {
+                    'Content-Type': 'application/json',
+                },
+                body: JSON.stringify(requestBody)
+            });
+
+            console.log('📡 Response status:', response.status);
+            console.log('📡 Response ok:', response.ok);
+
+            if (!response.ok) {
+                console.log('❌ Response not ok, getting error data...');
+                const errorData = await response.json();
+                console.log('❌ Error data:', errorData);
+                throw new Error(`API Error: ${errorData.error?.message || 'Unknown error'}`);
             }
 
-            // Default response
-            return `Thank you for your question: "${question}". I'm a placeholder answering system for now. The real AI-powered answering functionality will be implemented using Tauri's Rust backend with machine learning capabilities.`;
+            console.log('✅ Response ok, parsing JSON...');
+            const data = await response.json();
+            console.log('📄 Raw response data:', data);
+
+            if (!data.candidates || !data.candidates[0] || !data.candidates[0].content) {
+                console.log('❌ Invalid response structure');
+                throw new Error('Invalid API response');
+            }
+
+            const result = data.candidates[0].content.parts[0].text.trim();
+            console.log('🎯 Final result:', result);
+
+            return result;
+        }
+
+        showResult(answer) {
+            this.resultContent.textContent = answer;
+            this.resultSection.style.display = 'block';
+
+            // Scroll to result section
+            this.resultSection.scrollIntoView({ behavior: 'smooth' });
+        }
+
+        async copyResult() {
+            const text = this.resultContent.textContent;
+            if (!text) return;
+
+            try {
+                await navigator.clipboard.writeText(text);
+                // Show feedback
+                const button = this.copyResultBtn;
+                const originalText = button.textContent;
+                button.innerHTML = '✅ Copied!';
+                button.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+                setTimeout(() => {
+                    button.innerHTML = '📋 Copy Answer';
+                    button.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+                }, 2000);
+            } catch (err) {
+                console.error('Failed to copy result:', err);
+                alert('Failed to copy to clipboard');
+            }
+        }
+
+        addToHistory(clientMessage, shortAnswer, professionalAnswer) {
+            const historyItem = {
+                id: Date.now(),
+                timestamp: new Date().toLocaleString(),
+                clientMessage,
+                shortAnswer,
+                professionalAnswer
+            };
+
+            this.history.unshift(historyItem);
+
+            // Keep only last 10 items
+            if (this.history.length > 10) {
+                this.history = this.history.slice(0, 10);
+            }
+
+            this.saveHistory();
+            this.renderHistory();
+        }
+
+        renderHistory() {
+            if (this.history.length === 0) {
+                this.historyList.innerHTML = '<div class="history-placeholder">Your generated answers will appear here</div>';
+                return;
+            }
+
+            this.historyList.innerHTML = this.history.map(item => `
+            <div class="history-item">
+                <div class="timestamp">${item.timestamp}</div>
+                ${item.clientMessage ? `<div class="client-msg">"${item.clientMessage}"</div>` : ''}
+                <div class="short-answer">Short: ${item.shortAnswer}</div>
+                <div class="professional-answer">${item.professionalAnswer}</div>
+                <button class="copy-history-btn" onclick="answeringGuru.copyFromHistory('${item.professionalAnswer.replace(/'/g, "\\'")}')">📋 Copy</button>
+            </div>
+        `).join('');
+        }
+
+        async copyFromHistory(text) {
+            try {
+                await navigator.clipboard.writeText(text);
+                alert('Answer copied to clipboard!');
+            } catch (err) {
+                console.error('Failed to copy from history:', err);
+                alert('Failed to copy to clipboard');
+            }
+        }
+
+        loadHistory() {
+            try {
+                const saved = localStorage.getItem('answering-guru-history');
+                return saved ? JSON.parse(saved) : [];
+            } catch (err) {
+                console.error('Failed to load history:', err);
+                return [];
+            }
+        }
+
+        saveHistory() {
+            try {
+                localStorage.setItem('answering-guru-history', JSON.stringify(this.history));
+            } catch (err) {
+                console.error('Failed to save history:', err);
+            }
+        }
+
+        loadApiKey() {
+            this.apiKey = localStorage.getItem('gemini-api-key');
+            if (!this.apiKey) {
+                this.promptForApiKey();
+            }
+        }
+
+        toggleSettings() {
+            const isVisible = this.settingsPanel.style.display !== 'none';
+            this.settingsPanel.style.display = isVisible ? 'none' : 'block';
+
+            if (!isVisible) {
+                // Load current API key into input field when opening settings
+                this.apiKeyInput.value = this.apiKey || '';
+                this.apiKeyInput.focus();
+            }
+        }
+
+        async testApiKey() {
+            const testKey = this.apiKeyInput.value.trim();
+
+            if (!testKey) {
+                alert('Please enter an API key to test.');
+                return;
+            }
+
+            console.log('🧪 Testing API key...');
+
+            // Show testing feedback
+            const button = this.testApiKeyBtn;
+            const originalText = button.innerHTML;
+            button.innerHTML = '⏳ Testing...';
+            button.disabled = true;
+
+            try {
+                // Make a simple test request
+                const response = await fetch(`https://generativelanguage.googleapis.com/v1beta/models/gemini-2.5-flash:generateContent?key=${testKey}`, {
+                    method: 'POST',
+                    headers: {
+                        'Content-Type': 'application/json',
+                    },
+                    body: JSON.stringify({
+                        contents: [{
+                            parts: [{
+                                text: 'Hello, respond with just "OK" if you can read this message.'
+                            }]
+                        }],
+                        generationConfig: {
+                            temperature: 0.1,
+                            maxOutputTokens: 10,
+                        }
+                    })
+                });
+
+                if (response.ok) {
+                    const data = await response.json();
+                    if (data.candidates && data.candidates[0] && data.candidates[0].content) {
+                        console.log('✅ API key test successful!');
+                        button.innerHTML = '✅ Working!';
+                        button.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+                        alert('✅ API key is working correctly!');
+                    } else {
+                        throw new Error('Invalid response structure');
+                    }
+                } else {
+                    const errorData = await response.json();
+                    console.log('❌ API key test failed:', errorData);
+                    throw new Error(errorData.error?.message || 'API test failed');
+                }
+
+            } catch (error) {
+                console.error('❌ API key test error:', error);
+                button.innerHTML = '❌ Failed';
+                button.style.background = 'linear-gradient(135deg, #dc3545 0%, #c82333 100%)';
+                alert(`❌ API key test failed: ${error.message}\n\nPlease check your API key and try again.`);
+            } finally {
+                // Reset button after delay
+                setTimeout(() => {
+                    button.innerHTML = originalText;
+                    button.style.background = 'linear-gradient(135deg, #ffc107 0%, #fd7e14 100%)';
+                    button.disabled = false;
+                }, 3000);
+            }
+        }
+
+        saveApiKey() {
+            const newApiKey = this.apiKeyInput.value.trim();
+
+            if (!newApiKey) {
+                alert('Please enter a valid API key.');
+                return;
+            }
+
+            // Save to localStorage
+            this.apiKey = newApiKey;
+            localStorage.setItem('gemini-api-key', this.apiKey);
+
+            // Show success feedback
+            const button = this.saveApiKeyBtn;
+            const originalText = button.innerHTML;
+            button.innerHTML = '✅ Saved!';
+            button.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+
+            setTimeout(() => {
+                button.innerHTML = originalText;
+                button.style.background = 'linear-gradient(135deg, #28a745 0%, #20c997 100%)';
+            }, 2000);
+
+            // Close settings panel after a delay
+            setTimeout(() => {
+                this.settingsPanel.style.display = 'none';
+            }, 1500);
+        }
+
+        toggleHistory() {
+            const isVisible = this.historySidebar.classList.contains('show');
+            if (isVisible) {
+                this.closeHistory();
+            } else {
+                this.openHistory();
+            }
+        }
+
+        openHistory() {
+            this.historySidebar.classList.add('show');
+            this.historySidebar.style.display = 'flex';
+        }
+
+        closeHistory() {
+            this.historySidebar.classList.remove('show');
+            setTimeout(() => {
+                this.historySidebar.style.display = 'none';
+            }, 300); // Match transition duration
+        }
+
+        promptForApiKey() {
+            const apiKey = prompt('Please enter your Gemini API key (get one from Google AI Studio):');
+            if (apiKey && apiKey.trim()) {
+                this.apiKey = apiKey.trim();
+                localStorage.setItem('gemini-api-key', this.apiKey);
+            } else {
+                alert('API key is required to use this application. Please refresh and enter your key.');
+            }
         }
     }
-
-    // Initialize the application when DOM is loaded
     document.addEventListener('DOMContentLoaded', () => {
         new AnsweringGuru();
     });
