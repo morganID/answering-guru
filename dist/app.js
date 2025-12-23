@@ -172,23 +172,30 @@
         async generateProfessionalAnswer(shortAnswer) {
             const clientMessage = this.clientMessageInput.value.trim();
 
-            const prompt = `You are a professional freelancer. Transform the short answer into a professional, friendly response that directly addresses the client's message.
+            const prompt = `You are a professional freelancer. Transform the short answer into a natural, human-like response that directly addresses the client's message.
 
 CLIENT MESSAGE: "${clientMessage || 'No specific context'}"
 
 YOUR SHORT ANSWER: "${shortAnswer}"
 
-Create a professional response in ENGLISH with these requirements:
+Create a natural, conversational response in ENGLISH with these requirements:
 
-1. **CONTEXT APPROPRIATE**: Answer must directly respond to and be relevant to the client's message
-2. **PROFESSIONAL**: Use formal business language that is polite and well-structured
-3. **FRIENDLY**: Add warmth and friendliness without losing professionalism
-4. **COMPREHENSIVE**: Provide sufficient detail but not verbose
-5. **POSITIVE**: Always use a positive and helpful tone
+1. **HUMAN-LIKE**: Sound like a real person speaking, not a robot
+2. **NATURAL FLOW**: Use contractions, casual but professional language
+3. **CONTEXT APPROPRIATE**: Answer must directly respond to and be relevant to the client's message
+4. **FRIENDLY**: Add warmth and approachability
+5. **COMPREHENSIVE**: Provide sufficient detail but keep it conversational
+6. **POSITIVE**: Always use a positive and helpful tone
 
-IMPORTANT: Respond ONLY with the professional answer itself. Do NOT include any greeting, opening phrases, or closing phrases like "Hello", "Thank you", "Best regards", etc. Just the direct professional response.
+CRITICAL INSTRUCTIONS:
+- DO NOT use any markdown formatting (*, **, _, etc.)
+- DO NOT include greetings or closings
+- DO NOT sound robotic or overly formal
+- Write like you're having a natural conversation
+- Use normal punctuation and sentence structure
+- Be helpful and personable
 
-PROFESSIONAL RESPONSE:`;
+NATURAL RESPONSE:`;
 
             console.log('📡 Making API request...');
             console.log('🔗 API URL:', `https://generativelanguage.googleapis.com/v1beta/models/gemini-1.5-flash:generateContent?key=${this.apiKey.substring(0, 10)}...`);
